@@ -8,6 +8,13 @@
       "when": 1788057966774,
       "tag": "0000_opposite_centennial",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1788059237146,
+      "tag": "0001_motionless_tarantula",
+      "breakpoints": true
     }
   ]
 }

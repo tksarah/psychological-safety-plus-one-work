@@ -16,7 +16,9 @@ const answerOptions: Answer[] = ["yes", "no", "unknown"];
 
 export default function Home() {
   const [sessionCode, setSessionCode] = useState("");
+  const [sessionTitle, setSessionTitle] = useState("");
   const [joinCode, setJoinCode] = useState("");
+  const [checkingSession, setCheckingSession] = useState(false);
   const [step, setStep] = useState(1);
   const [answers, setAnswers] = useState<Record<number, Answer>>({});
   const [selectedItem, setSelectedItem] = useState<number | null>(null);
@@ -28,11 +30,25 @@ export default function Home() {
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const code = params.get("session") ?? "";
-    if (/^[a-zA-Z0-9_-]{3,32}$/.test(code)) {
-      setSessionCode(code);
-      if (params.get("view") === "board") setStep(5);
+    const code = (params.get("session") ?? "").toUpperCase();
+    if (!code) return;
+    setJoinCode(code);
+    if (!/^[A-Z2-9]{6}$/.test(code)) {
+      setError("開催コードが正しくありません。講師から案内されたコードを確認してください。");
+      return;
     }
+
+    setCheckingSession(true);
+    void fetch(`/api/session?code=${encodeURIComponent(code)}`, { cache: "no-store" })
+      .then(async (response) => {
+        const body = await response.json();
+        if (!response.ok) throw new Error(body.error ?? "開催情報を確認できませんでした。");
+        setSessionCode(body.session.code);
+        setSessionTitle(body.session.title);
+        if (params.get("view") === "board") setStep(5);
+      })
+      .catch((sessionError) => setError(sessionError instanceof Error ? sessionError.message : "開催情報を確認できませんでした。"))
+      .finally(() => setCheckingSession(false));
   }, []);
 
   const loadActions = useCallback(async () => {
@@ -66,13 +82,23 @@ export default function Home() {
     return answer && (answer === "unknown" || (question.reverse ? answer === "yes" : answer === "no"));
   }), [answers]);
 
-  function joinSession() {
-    const clean = joinCode.trim();
-    if (!/^[a-zA-Z0-9_-]{3,32}$/.test(clean)) {
-      setError("講師から案内された3〜32文字のコードを入力してください。");
+  async function joinSession() {
+    const clean = joinCode.trim().toUpperCase();
+    if (!/^[A-Z2-9]{6}$/.test(clean)) {
+      setError("講師から案内された6文字の開催コードを入力してください。");
       return;
     }
-    window.location.href = `/?session=${encodeURIComponent(clean)}`;
+    setCheckingSession(true);
+    setError("");
+    try {
+      const response = await fetch(`/api/session?code=${encodeURIComponent(clean)}`, { cache: "no-store" });
+      const body = await response.json();
+      if (!response.ok) throw new Error(body.error ?? "開催情報を確認できませんでした。");
+      window.location.href = `/?session=${encodeURIComponent(clean)}`;
+    } catch (joinError) {
+      setError(joinError instanceof Error ? joinError.message : "開催情報を確認できませんでした。");
+      setCheckingSession(false);
+    }
   }
 
   async function submitAction() {
@@ -96,6 +122,10 @@ export default function Home() {
     }
   }
 
+  if (checkingSession && !sessionCode) {
+    return <main className="flex min-h-screen items-center justify-center px-4"><div className="rounded-2xl border bg-white px-6 py-5 text-sm text-muted-foreground shadow-sm">開催情報を確認しています…</div></main>;
+  }
+
   if (!sessionCode) {
     return (
       <main className="min-h-screen px-4 py-10 sm:py-16">
@@ -108,10 +138,10 @@ export default function Home() {
               <CardDescription className="pt-2 text-base leading-7">7つの問いでチームを振り返り、明日からできる小さな行動を一つ決めます。所要時間は約7分です。</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4 px-6 sm:px-9">
-              <label htmlFor="join-code" className="text-sm font-semibold">講師から案内されたワークコード</label>
+              <label htmlFor="join-code" className="text-sm font-semibold">講師から案内された開催コード</label>
               <div className="flex gap-2">
-                <Input id="join-code" value={joinCode} onChange={(event) => setJoinCode(event.target.value)} placeholder="例：0830-A" onKeyDown={(event) => event.key === "Enter" && joinSession()} />
-                <Button onClick={joinSession}>参加する</Button>
+                <Input id="join-code" className="font-mono uppercase tracking-[0.2em]" maxLength={6} value={joinCode} onChange={(event) => setJoinCode(event.target.value.toUpperCase())} placeholder="例：AB7K2M" onKeyDown={(event) => event.key === "Enter" && void joinSession()} />
+                <Button disabled={checkingSession} onClick={() => void joinSession()}>{checkingSession ? "確認中…" : "参加する"}</Button>
               </div>
               {error && <p className="text-sm text-destructive" role="alert">{error}</p>}
               <p className="rounded-xl bg-muted px-4 py-3 text-xs leading-6 text-muted-foreground">7項目の回答は保存・送信されません。最後に作成した「プラス1行動」だけが匿名で共有されます。</p>
@@ -126,7 +156,7 @@ export default function Home() {
     <main className="min-h-screen px-4 py-6 sm:px-6 sm:py-10">
       <div className="mx-auto max-w-4xl">
         <header className="mb-6 flex items-start justify-between gap-4">
-          <div><p className="mb-1 text-xs font-bold tracking-[0.16em] text-primary">PSYCHOLOGICAL SAFETY</p><h1 className="text-xl font-bold sm:text-2xl">プラス1行動ワーク</h1></div>
+          <div><p className="mb-1 text-xs font-bold tracking-[0.16em] text-primary">PSYCHOLOGICAL SAFETY</p><h1 className="text-xl font-bold sm:text-2xl">プラス1行動ワーク</h1><p className="mt-1 text-xs text-muted-foreground">{sessionTitle}</p></div>
           <Badge variant="secondary">コード：{sessionCode}</Badge>
         </header>
 
