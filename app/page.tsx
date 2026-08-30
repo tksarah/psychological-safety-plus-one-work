@@ -1,11 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ArrowLeft, ArrowRight, Check, Lightbulb, RefreshCw, Send, ShieldCheck, Users } from "lucide-react";
+import { ArrowLeft, ArrowRight, BookmarkCheck, Lightbulb, RefreshCw, Send, Users } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { Progress } from "@/components/ui/progress";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Textarea } from "@/components/ui/textarea";
@@ -51,6 +51,16 @@ export default function Home() {
       .finally(() => setCheckingSession(false));
   }, []);
 
+  useEffect(() => {
+    if (!sessionCode) return;
+    try {
+      const stored = window.localStorage.getItem(`ps-workshop:${sessionCode}:my-action`);
+      if (stored && Number.isInteger(Number(stored))) setMyActionId(Number(stored));
+    } catch {
+      // The marker is a device-local convenience; the workshop still works without storage.
+    }
+  }, [sessionCode]);
+
   const loadActions = useCallback(async () => {
     if (!sessionCode) return;
     setLoading(true);
@@ -81,6 +91,14 @@ export default function Home() {
     const answer = answers[question.number];
     return answer && (answer === "unknown" || (question.reverse ? answer === "yes" : answer === "no"));
   }), [answers]);
+  const displayedActions = useMemo(() => {
+    if (!myActionId) return postedActions;
+    return [...postedActions].sort((left, right) => {
+      if (left.id === myActionId) return -1;
+      if (right.id === myActionId) return 1;
+      return 0;
+    });
+  }, [postedActions, myActionId]);
 
   async function joinSession() {
     const clean = joinCode.trim().toUpperCase();
@@ -114,6 +132,11 @@ export default function Home() {
       const body = await response.json();
       if (!response.ok) throw new Error(body.error ?? "投稿できませんでした。");
       setMyActionId(body.action.id);
+      try {
+        window.localStorage.setItem(`ps-workshop:${sessionCode}:my-action`, String(body.action.id));
+      } catch {
+        // The personal marker is optional and does not affect the anonymous post.
+      }
       setStep(5);
     } catch (submitError) {
       setError(submitError instanceof Error ? submitError.message : "投稿できませんでした。");
@@ -128,45 +151,85 @@ export default function Home() {
 
   if (!sessionCode) {
     return (
-      <main className="min-h-screen px-4 py-10 sm:py-16">
-        <div className="mx-auto max-w-xl">
-          <Card className="overflow-hidden border-0 shadow-[0_24px_70px_rgba(39,84,74,0.14)]">
-            <div className="h-2 bg-[linear-gradient(90deg,#2c8b78,#82c9b8,#efb665)]" />
-            <CardHeader className="px-6 pt-2 sm:px-9">
-              <div className="mb-4 flex size-12 items-center justify-center rounded-2xl bg-secondary text-primary"><ShieldCheck className="size-6" /></div>
-              <CardTitle className="text-2xl leading-tight sm:text-3xl">心理的安全性<br />プラス1行動ワーク</CardTitle>
-              <CardDescription className="pt-2 text-base leading-7">7つの問いでチームを振り返り、明日からできる小さな行動を一つ決めます。所要時間は約7分です。</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4 px-6 sm:px-9">
-              <label htmlFor="join-code" className="text-sm font-semibold">講師から案内された開催コード</label>
-              <div className="flex gap-2">
-                <Input id="join-code" className="font-mono uppercase tracking-[0.2em]" maxLength={6} value={joinCode} onChange={(event) => setJoinCode(event.target.value.toUpperCase())} placeholder="例：AB7K2M" onKeyDown={(event) => event.key === "Enter" && void joinSession()} />
-                <Button disabled={checkingSession} onClick={() => void joinSession()}>{checkingSession ? "確認中…" : "参加する"}</Button>
+      <div className="paper-shell min-h-screen bg-background">
+        <header className="border-b border-foreground/20 bg-[#fffdf8]">
+          <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-4 sm:px-8">
+            <div className="flex items-center gap-3">
+              <span className="flex size-9 items-center justify-center border border-foreground bg-foreground font-serif text-sm font-bold text-white">PS</span>
+              <div><p className="text-sm font-bold">心理的安全性</p><p className="rule-label text-[9px] text-muted-foreground">Micro Workshop</p></div>
+            </div>
+            <a href="/facilitator" className="border-b border-foreground/40 pb-1 text-xs font-medium hover:border-primary hover:text-primary">講師の方はこちら</a>
+          </div>
+        </header>
+
+        <main>
+          <section className="border-b border-foreground/20 bg-[#fffdf8]">
+            <div className="mx-auto grid max-w-6xl lg:grid-cols-[1.15fr_0.85fr]">
+              <div className="px-5 py-14 sm:px-8 sm:py-20 lg:border-r lg:border-foreground/20 lg:py-28">
+                <p className="rule-label mb-7 text-xs font-bold text-[#9b3e31]">7 minutes / individual reflection</p>
+                <h1 className="editorial-title max-w-2xl text-[2.65rem] leading-[1.2] sm:text-6xl">話しやすいチームは、<br className="hidden sm:block" />小さな反応から。</h1>
+                <p className="mt-8 max-w-xl text-base leading-8 text-muted-foreground">7つの問いで普段のチームを振り返り、明日から自分にできる「プラス1行動」を一つ決める短いワークです。</p>
+                <div className="mt-10 flex flex-wrap gap-x-8 gap-y-3 border-t border-foreground/20 pt-5 text-xs text-muted-foreground"><span>所要時間 約7分</span><span>回答は保存しません</span><span>投稿は匿名です</span></div>
               </div>
-              {error && <p className="text-sm text-destructive" role="alert">{error}</p>}
-              <p className="rounded-xl bg-muted px-4 py-3 text-xs leading-6 text-muted-foreground">7項目の回答は保存・送信されません。最後に作成した「プラス1行動」だけが匿名で共有されます。</p>
-            </CardContent>
-          </Card>
-        </div>
-      </main>
+
+              <div className="flex items-center px-5 py-12 sm:px-8 lg:px-12">
+                <div className="w-full border-t-4 border-[#9b3e31] bg-background p-6 sm:p-8">
+                  <p className="rule-label text-[10px] font-bold text-muted-foreground">Join the workshop</p>
+                  <h2 className="editorial-title mt-3 text-2xl">開催コードを入力</h2>
+                  <p className="mt-3 text-sm leading-6 text-muted-foreground">講師から案内された6文字のコードを入力してください。</p>
+                  <div className="mt-7">
+                    <InputOTP
+                      maxLength={6}
+                      value={joinCode}
+                      onChange={(value) => setJoinCode(value.toUpperCase().replace(/[^A-Z2-9]/g, ""))}
+                      containerClassName="justify-between"
+                      aria-label="6文字の開催コード"
+                    >
+                      <InputOTPGroup className="gap-2">
+                        {[0, 1, 2, 3, 4, 5].map((index) => <InputOTPSlot key={index} index={index} className="h-12 w-10 border bg-[#fffdf8] font-mono text-lg font-bold sm:w-12" />)}
+                      </InputOTPGroup>
+                    </InputOTP>
+                  </div>
+                  <Button className="mt-6 h-11 w-full" disabled={checkingSession || joinCode.length !== 6} onClick={() => void joinSession()}>{checkingSession ? "開催を確認しています…" : "ワークを始める"}<ArrowRight /></Button>
+                  {error && <p className="mt-4 border-l-2 border-destructive pl-3 text-sm text-destructive" role="alert">{error}</p>}
+                  <p className="mt-6 border-t border-foreground/15 pt-4 text-xs leading-6 text-muted-foreground">名前の入力はありません。最後に作成した「プラス1行動」だけを、参加者同士で共有します。</p>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section className="mx-auto max-w-6xl px-5 py-14 sm:px-8 sm:py-20">
+            <div className="mb-9 grid gap-4 sm:grid-cols-[1fr_2fr] sm:items-end"><p className="rule-label text-xs font-bold text-[#9b3e31]">How it works</p><h2 className="editorial-title text-3xl sm:text-4xl">考える、選ぶ、行動にする。</h2></div>
+            <div className="grid border-y border-foreground/20 md:grid-cols-3">
+              {[
+                ["01", "振り返る", "現在または過去のチームを一つ決め、7つの問いに答えます。"],
+                ["02", "一つ選ぶ", "気になる項目、または自分から動けそうな項目を選びます。"],
+                ["03", "共有する", "明日からのプラス1行動を匿名で投稿し、みんなで共有します。"],
+              ].map(([number, label, detail], index) => <article key={number} className={`py-7 md:px-7 ${index > 0 ? "border-t border-foreground/20 md:border-l md:border-t-0" : ""}`}><p className="font-mono text-sm font-bold text-[#9b3e31]">{number}</p><h3 className="mt-5 text-lg font-bold">{label}</h3><p className="mt-3 text-sm leading-7 text-muted-foreground">{detail}</p></article>)}
+            </div>
+          </section>
+        </main>
+
+        <footer className="border-t border-foreground/20 px-5 py-5 text-center text-[10px] tracking-wider text-muted-foreground">PSYCHOLOGICAL SAFETY · PLUS ONE ACTION</footer>
+      </div>
     );
   }
 
   return (
-    <main className="min-h-screen px-4 py-6 sm:px-6 sm:py-10">
+    <main className="paper-shell min-h-screen px-4 py-6 sm:px-6 sm:py-10">
       <div className="mx-auto max-w-4xl">
-        <header className="mb-6 flex items-start justify-between gap-4">
-          <div><p className="mb-1 text-xs font-bold tracking-[0.16em] text-primary">PSYCHOLOGICAL SAFETY</p><h1 className="text-xl font-bold sm:text-2xl">プラス1行動ワーク</h1><p className="mt-1 text-xs text-muted-foreground">{sessionTitle}</p></div>
-          <Badge variant="secondary">コード：{sessionCode}</Badge>
+        <header className="mb-6 flex items-start justify-between gap-4 border-b border-foreground/20 pb-5">
+          <div><p className="rule-label mb-1 text-[10px] font-bold text-[#9b3e31]">Psychological Safety / Workshop</p><h1 className="editorial-title text-2xl sm:text-3xl">プラス1行動ワーク</h1><p className="mt-2 text-xs text-muted-foreground">{sessionTitle}</p></div>
+          <Badge variant="outline" className="font-mono tracking-wider">{sessionCode}</Badge>
         </header>
 
-        <div className="mb-6 rounded-2xl border bg-white/75 p-4 backdrop-blur">
+        <div className="mb-7 border bg-[#fffdf8] p-4">
           <div className="mb-2 flex justify-between text-xs font-medium text-muted-foreground"><span>{step === 5 ? "みんなのプラス1行動" : `STEP ${step} / 4`}</span><span>{step === 5 ? "完了" : `${progress}%`}</span></div>
           <Progress value={progress} />
         </div>
 
         {step === 1 && (
-          <Card className="border-0 shadow-[0_18px_55px_rgba(39,84,74,0.10)]">
+          <Card>
             <CardHeader><div className="mb-2 flex size-11 items-center justify-center rounded-2xl bg-secondary text-primary"><Users /></div><CardTitle className="text-2xl">振り返るチームを一つ決める</CardTitle><CardDescription className="text-base leading-7">現在または過去に所属したチームを一つ思い浮かべてください。</CardDescription></CardHeader>
             <CardContent className="space-y-5">
               <div className="grid gap-3 sm:grid-cols-3">{["職場・部署", "プロジェクト", "学校・地域・コミュニティ"].map((label) => <div key={label} className="rounded-2xl border bg-muted/45 p-4 text-center text-sm font-medium">{label}</div>)}</div>
@@ -209,7 +272,7 @@ export default function Home() {
         )}
 
         {step === 4 && selectedQuestion && (
-          <Card className="border-0 shadow-[0_18px_55px_rgba(39,84,74,0.10)]">
+          <Card>
             <CardHeader><Badge variant="secondary">選んだ項目 {selectedQuestion.number}</Badge><CardTitle className="pt-2 text-2xl">自分の「プラス1行動」を決める</CardTitle><CardDescription className="text-base leading-7">明日から試せる、小さく具体的な行動を書いてください。</CardDescription></CardHeader>
             <CardContent className="space-y-5">
               <div className="rounded-2xl bg-muted p-4"><p className="text-xs font-bold text-primary">選んだ問い</p><p className="mt-2 text-sm leading-6">{selectedQuestion.text}</p></div>
@@ -224,10 +287,14 @@ export default function Home() {
 
         {step === 5 && (
           <section>
-            <div className="mb-6 rounded-3xl bg-primary px-5 py-6 text-primary-foreground sm:px-8"><div className="flex items-start gap-4"><div className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-white/15"><Check /></div><div><h2 className="text-2xl font-bold">みんなのプラス1行動</h2><p className="mt-2 text-sm leading-6 text-white/80">小さな行動の積み重ねが、質問・報告・意見を言いやすいチームをつくります。</p></div></div></div>
+            <div className="mb-6 border-l-4 border-[#9b3e31] bg-foreground px-5 py-6 text-white sm:px-8"><p className="rule-label text-[10px] font-bold text-white/60">Shared actions</p><h2 className="editorial-title mt-2 text-2xl">みんなのプラス1行動</h2><p className="mt-2 text-sm leading-6 text-white/70">小さな行動の積み重ねが、質問・報告・意見を言いやすいチームをつくります。</p></div>
+            {myActionId && <div className="mb-4 flex items-center gap-2 border border-[#9b3e31]/35 bg-[#fff8ed] px-4 py-3 text-xs text-[#78372c]"><BookmarkCheck className="size-4" /><span>赤いしおりの付いた投稿が、あなたのプラス1行動です。この目印はこの端末でだけ表示されます。</span></div>}
             <div className="mb-4 flex items-center justify-between"><p className="text-sm text-muted-foreground">{postedActions.length}件の行動</p><Button variant="outline" size="sm" onClick={() => void loadActions()} disabled={loading}><RefreshCw className={loading ? "animate-spin" : ""} />更新</Button></div>
             {error && <p className="mb-4 rounded-xl bg-red-50 p-3 text-sm text-destructive" role="alert">{error}</p>}
-            {postedActions.length === 0 && !loading ? <div className="rounded-3xl border border-dashed bg-white/60 p-10 text-center text-muted-foreground">最初の投稿を待っています。</div> : <div className="grid gap-4 md:grid-cols-2">{postedActions.map((action) => <article key={action.id} className={`rounded-2xl border bg-white p-5 shadow-sm ${myActionId === action.id ? "border-primary ring-2 ring-primary/15" : ""}`}><div className="mb-3 flex items-center justify-between"><Badge variant="secondary">項目 {action.itemNumber}</Badge>{myActionId === action.id && <span className="text-xs font-bold text-primary">あなたの行動</span>}</div><p className="whitespace-pre-wrap text-sm font-medium leading-7">{action.actionText}</p></article>)}</div>}
+            {postedActions.length === 0 && !loading ? <div className="border border-dashed bg-white/60 p-10 text-center text-muted-foreground">最初の投稿を待っています。</div> : <div className="grid gap-4 md:grid-cols-2">{displayedActions.map((action) => {
+              const mine = myActionId === action.id;
+              return <article key={action.id} className={`relative border bg-[#fffdf8] p-5 ${mine ? "border-[#9b3e31] border-l-4 bg-[#fff8ed]" : ""}`}>{mine && <div className="absolute -top-px right-4 flex items-center gap-1 bg-[#9b3e31] px-3 py-1 text-[10px] font-bold text-white"><BookmarkCheck className="size-3" />あなた</div>}<div className="mb-3"><Badge variant="outline">項目 {action.itemNumber}</Badge></div><p className="whitespace-pre-wrap text-sm font-medium leading-7">{action.actionText}</p></article>;
+            })}</div>}
           </section>
         )}
       </div>

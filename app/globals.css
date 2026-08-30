@@ -19,30 +19,30 @@
 }
 
 :root {
-  --background: #f4f7f5;
-  --foreground: #18302b;
-  --card: #ffffff;
-  --card-foreground: #18302b;
-  --popover: #ffffff;
-  --popover-foreground: #171717;
-  --primary: #247666;
+  --background: #f4f0e7;
+  --foreground: #202a33;
+  --card: #fffdf8;
+  --card-foreground: #202a33;
+  --popover: #fffdf8;
+  --popover-foreground: #202a33;
+  --primary: #315b50;
   --primary-foreground: #ffffff;
-  --secondary: #e7f2ee;
-  --secondary-foreground: #205d52;
-  --muted: #eef3f1;
-  --muted-foreground: #60736e;
-  --accent: #fff1df;
-  --accent-foreground: #7b4b18;
-  --destructive: #e7000b;
-  --border: #d8e3df;
-  --input: #cbdad5;
-  --ring: #53a998;
+  --secondary: #e6ebe6;
+  --secondary-foreground: #294d44;
+  --muted: #ece8df;
+  --muted-foreground: #687078;
+  --accent: #f3e3d5;
+  --accent-foreground: #78372c;
+  --destructive: #a5362a;
+  --border: #d2ccc0;
+  --input: #bdb6aa;
+  --ring: #315b50;
   --chart-1: #f54900;
   --chart-2: #009689;
   --chart-3: #104e64;
   --chart-4: #ffb900;
   --chart-5: #fe9a00;
-  --radius: 0.9rem;
+  --radius: 0.3rem;
   --sidebar: #fafafa;
   --sidebar-foreground: #171717;
   --sidebar-primary: #171717;
@@ -90,6 +90,7 @@
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
   --font-sans: "Noto Sans JP", "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
+  --font-serif: "Yu Mincho", "Hiragino Mincho ProN", "Noto Serif JP", serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
     "Liberation Mono", "Courier New", monospace;
 }
@@ -98,15 +99,28 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans);
-  background-image:
-    radial-gradient(circle at 8% 4%, rgba(84, 175, 153, 0.13), transparent 28rem),
-    radial-gradient(circle at 92% 12%, rgba(242, 177, 93, 0.12), transparent 24rem);
   min-height: 100vh;
 }
 
 button, input, textarea { font: inherit; }
 
+[data-slot="card"] { box-shadow: none; }
+
+.paper-shell [class*="rounded-"] { border-radius: 0.3rem; }
+.paper-shell [class*="shadow-"] { box-shadow: none; }
+
+.editorial-title {
+  font-family: var(--font-serif);
+  font-weight: 600;
+  letter-spacing: -0.035em;
+}
+
+.rule-label {
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
 ::selection {
-  background: #bfe3da;
-  color: #173b33;
+  background: #d9cbb9;
+  color: #202a33;
 }

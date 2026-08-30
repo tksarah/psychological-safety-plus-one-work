@@ -56,7 +56,7 @@ export default function FacilitatorDashboard({ displayName }: { displayName: str
   const [error, setError] = useState("");
 
   const origin = typeof window === "undefined" ? "" : window.location.origin;
-  const participantUrl = useCallback((code: string) => `${origin}/?session=${encodeURIComponent(code)}`, [origin]);
+  const invitationText = useCallback((session: Session) => `心理的安全性 プラス1行動ワーク\n${origin}\n開催コード：${session.code}`, [origin]);
 
   const loadSessions = useCallback(async () => {
     setLoading(true);
@@ -99,7 +99,7 @@ export default function FacilitatorDashboard({ displayName }: { displayName: str
   }
 
   async function copyParticipantUrl(session: Session) {
-    await navigator.clipboard.writeText(participantUrl(session.code));
+    await navigator.clipboard.writeText(invitationText(session));
     setCopiedCode(session.code);
     window.setTimeout(() => setCopiedCode(null), 1800);
   }
@@ -142,7 +142,7 @@ export default function FacilitatorDashboard({ displayName }: { displayName: str
 
   return (
     <main className="min-h-screen px-4 py-8 sm:px-6 sm:py-12">
-      <div className="mx-auto max-w-6xl space-y-7">
+      <div className="paper-shell mx-auto max-w-6xl space-y-7">
         <header className="rounded-3xl bg-[#173f37] px-6 py-8 text-white sm:px-10">
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div><Badge className="mb-4 bg-white/15 text-white">講師用</Badge><h1 className="text-3xl font-bold sm:text-4xl">開催管理・進行ガイド</h1><p className="mt-4 max-w-2xl text-sm leading-7 text-white/75">開催を作成して参加URLを共有し、開催ごとの投稿を確認・削除できます。</p></div>
@@ -154,7 +154,7 @@ export default function FacilitatorDashboard({ displayName }: { displayName: str
           <CardHeader><CardTitle className="flex items-center gap-2 text-xl"><Plus className="text-primary" />新しい開催を作成</CardTitle><CardDescription>開催名を入力して作成すると、参加用コードとURLが正式に発行されます。</CardDescription></CardHeader>
           <CardContent className="space-y-4">
             <div className="grid gap-3 sm:grid-cols-[1fr_auto]"><Input maxLength={60} value={title} onChange={(event) => setTitle(event.target.value)} placeholder="例：8月30日 午前の部" onKeyDown={(event) => event.key === "Enter" && void createSession()} /><Button disabled={creating || !title.trim()} onClick={() => void createSession()}>{creating ? <LoaderCircle className="animate-spin" /> : <Plus />}{creating ? "作成中…" : "開催を作成する"}</Button></div>
-            {createdSession && <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-5"><div className="flex flex-wrap items-start justify-between gap-4"><div><p className="text-xs font-bold text-emerald-800">開催を作成しました</p><h3 className="mt-1 font-bold">{createdSession.title}</h3><p className="mt-3 font-mono text-3xl font-bold tracking-[0.18em] text-emerald-900">{createdSession.code}</p></div><Button onClick={() => void copyParticipantUrl(createdSession)}>{copiedCode === createdSession.code ? <Check /> : <Clipboard />}{copiedCode === createdSession.code ? "コピーしました" : "参加URLをコピー"}</Button></div><p className="mt-3 break-all text-xs leading-6 text-emerald-800">{participantUrl(createdSession.code)}</p></div>}
+            {createdSession && <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-5"><div className="flex flex-wrap items-start justify-between gap-4"><div><p className="text-xs font-bold text-emerald-800">開催を作成しました</p><h3 className="mt-1 font-bold">{createdSession.title}</h3><p className="mt-3 font-mono text-3xl font-bold tracking-[0.18em] text-emerald-900">{createdSession.code}</p></div><Button onClick={() => void copyParticipantUrl(createdSession)}>{copiedCode === createdSession.code ? <Check /> : <Clipboard />}{copiedCode === createdSession.code ? "コピーしました" : "参加案内をコピー"}</Button></div><p className="mt-3 text-xs leading-6 text-emerald-800">サイトURLと開催コードをまとめてコピーし、Zoomチャットへ貼り付けられます。</p></div>}
             {error && <p className="rounded-xl bg-red-50 p-3 text-sm text-destructive" role="alert">{error}</p>}
           </CardContent>
         </Card>
@@ -164,7 +164,7 @@ export default function FacilitatorDashboard({ displayName }: { displayName: str
           {loading && sessions.length === 0 ? <div className="rounded-2xl border bg-white p-8 text-center text-sm text-muted-foreground">開催一覧を読み込んでいます…</div> : sessions.length === 0 ? <div className="rounded-2xl border border-dashed bg-white/60 p-8 text-center text-sm text-muted-foreground">まだ開催はありません。上のフォームから最初の開催を作成してください。</div> : <div className="space-y-3">{sessions.map((session) => (
             <article key={session.id} className="grid gap-4 rounded-2xl border bg-white p-5 shadow-sm lg:grid-cols-[1fr_auto] lg:items-center">
               <div><div className="flex flex-wrap items-center gap-2"><h3 className="font-bold">{session.title}</h3><Badge variant="secondary">投稿 {session.actionCount}件</Badge></div><div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-muted-foreground"><span className="font-mono text-base font-bold tracking-[0.14em] text-primary">{session.code}</span><span>{new Date(`${session.createdAt}Z`).toLocaleString("ja-JP")}</span></div></div>
-              <div className="flex flex-wrap gap-2"><Button variant="outline" size="sm" onClick={() => void copyParticipantUrl(session)}>{copiedCode === session.code ? <Check /> : <Clipboard />}{copiedCode === session.code ? "コピー済み" : "参加URL"}</Button><Button variant="outline" size="sm" onClick={() => void viewResults(session)}><Eye />結果を見る</Button><AlertDialog><AlertDialogTrigger asChild><Button variant="outline" size="sm" className="text-destructive hover:text-destructive"><Trash2 />削除</Button></AlertDialogTrigger><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>「{session.title}」を削除しますか？</AlertDialogTitle><AlertDialogDescription>開催情報と、この開催に投稿されたプラス1行動がすべて削除されます。この操作は元に戻せません。</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>キャンセル</AlertDialogCancel><AlertDialogAction variant="destructive" disabled={deletingId === session.id} onClick={() => void deleteSession(session)}>削除する</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog></div>
+              <div className="flex flex-wrap gap-2"><Button variant="outline" size="sm" onClick={() => void copyParticipantUrl(session)}>{copiedCode === session.code ? <Check /> : <Clipboard />}{copiedCode === session.code ? "コピー済み" : "参加案内"}</Button><Button variant="outline" size="sm" onClick={() => void viewResults(session)}><Eye />結果を見る</Button><AlertDialog><AlertDialogTrigger asChild><Button variant="outline" size="sm" className="text-destructive hover:text-destructive"><Trash2 />削除</Button></AlertDialogTrigger><AlertDialogContent><AlertDialogHeader><AlertDialogTitle>「{session.title}」を削除しますか？</AlertDialogTitle><AlertDialogDescription>開催情報と、この開催に投稿されたプラス1行動がすべて削除されます。この操作は元に戻せません。</AlertDialogDescription></AlertDialogHeader><AlertDialogFooter><AlertDialogCancel>キャンセル</AlertDialogCancel><AlertDialogAction variant="destructive" disabled={deletingId === session.id} onClick={() => void deleteSession(session)}>削除する</AlertDialogAction></AlertDialogFooter></AlertDialogContent></AlertDialog></div>
             </article>
           ))}</div>}
         </section>

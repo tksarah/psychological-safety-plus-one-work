@@ -4,7 +4,7 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "心理的安全性 プラス1行動ワーク",
   description:
-    "7つの問いでチームを振り返り、明日から実践する小さな行動を一つ決めるワークです。",
+    "7つの問いでチームを振り返り、明日から実践する小さな行動を一つ決める7分間のワークです。",
   icons: {
     icon: "/favicon.svg",
     shortcut: "/favicon.svg",
