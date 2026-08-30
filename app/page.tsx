@@ -152,11 +152,12 @@ export default function Home() {
   if (!sessionCode) {
     return (
       <main className="welcome-page min-h-screen overflow-hidden">
-        <section className="welcome-hero mx-auto grid min-h-[82vh] max-w-[1320px] items-center gap-8 px-5 py-10 sm:px-8 sm:py-14 lg:grid-cols-[0.88fr_1.12fr] lg:gap-6 lg:px-12 lg:py-16">
-          <div className="relative z-10 mx-auto w-full max-w-xl lg:mx-0">
+        <section className="welcome-hero mx-auto grid min-h-[82vh] max-w-[1320px] items-center gap-8 px-5 py-10 sm:px-8 sm:py-14 lg:px-12 lg:py-16">
+          <div className="relative z-10 mx-auto w-full max-w-[720px] lg:mx-0">
             <p className="welcome-kicker">心理的安全性　ミニワーク</p>
-            <h1 className="welcome-title mt-5 text-[2.75rem] leading-[1.18] sm:text-[4.35rem]">
-              あしたの会話を、<br />少しだけ変えてみる。
+            <h1 className="welcome-title mt-5 leading-[1.18]">
+              <span>あしたの会話を、</span>
+              <span>少しだけ変えてみる。</span>
             </h1>
             <p className="mt-6 max-w-lg text-[15px] leading-8 text-[#5f625b] sm:text-base">
               7つの問いから、いつものチームを静かに振り返ります。最後に、自分から始められる小さな行動をひとつ選びましょう。
@@ -187,12 +188,12 @@ export default function Home() {
                 {checkingSession ? "開催を確認しています…" : "ワークを始める"}<ArrowRight />
               </Button>
               {error && <p className="mt-4 border-l-2 border-destructive pl-3 text-sm text-destructive" role="alert">{error}</p>}
-              <p className="mt-4 text-xs leading-6 text-[#777a72]">名前の入力はありません。最後の「プラス1行動」だけを匿名で共有します。</p>
+              <p className="mt-4 text-xs leading-6 text-[#777a72]">匿名で実施できます。</p>
             </div>
           </div>
 
           <figure className="watercolor-figure relative mx-auto w-full max-w-3xl self-stretch lg:min-h-[690px]">
-            <img src="/watercolor-conversation.png" alt="丸いテーブルを囲み、穏やかに話を聴き合う人たちの水彩画" className="h-full min-h-[390px] w-full object-contain object-center lg:min-h-[690px]" />
+            <img src="/watercolor-conversation-no-people.png" alt="対話の準備が整った丸いテーブルと椅子、カップ、ノート、植物の水彩画" className="h-full min-h-[390px] w-full object-contain object-center lg:min-h-[690px]" />
             <figcaption className="watercolor-caption absolute bottom-[5%] left-[4%] max-w-[260px] -rotate-2 text-sm leading-7 text-[#62665f] sm:left-[8%] lg:hidden">
               答えに正解はありません。<br />思い浮かぶままで大丈夫です。
             </figcaption>
