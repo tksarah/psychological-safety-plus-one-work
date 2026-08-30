@@ -151,67 +151,71 @@ export default function Home() {
 
   if (!sessionCode) {
     return (
-      <div className="paper-shell min-h-screen bg-background">
-        <header className="border-b border-foreground/20 bg-[#fffdf8]">
-          <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-4 sm:px-8">
-            <div className="flex items-center gap-3">
-              <span className="flex size-9 items-center justify-center border border-foreground bg-foreground font-serif text-sm font-bold text-white">PS</span>
-              <div><p className="text-sm font-bold">心理的安全性</p><p className="rule-label text-[9px] text-muted-foreground">Micro Workshop</p></div>
+      <main className="welcome-page min-h-screen overflow-hidden">
+        <section className="welcome-hero mx-auto grid min-h-[82vh] max-w-[1320px] items-center gap-8 px-5 py-10 sm:px-8 sm:py-14 lg:grid-cols-[0.88fr_1.12fr] lg:gap-6 lg:px-12 lg:py-16">
+          <div className="relative z-10 mx-auto w-full max-w-xl lg:mx-0">
+            <p className="welcome-kicker">心理的安全性　ミニワーク</p>
+            <h1 className="welcome-title mt-5 text-[2.75rem] leading-[1.18] sm:text-[4.35rem]">
+              あしたの会話を、<br />少しだけ変えてみる。
+            </h1>
+            <p className="mt-6 max-w-lg text-[15px] leading-8 text-[#5f625b] sm:text-base">
+              7つの問いから、いつものチームを静かに振り返ります。最後に、自分から始められる小さな行動をひとつ選びましょう。
+            </p>
+
+            <div className="welcome-tags mt-7 flex flex-wrap gap-2.5 text-xs text-[#63655f]">
+              <span>約7分</span><span>個人ワーク</span><span>回答は保存されません</span>
             </div>
-            <a href="/facilitator" className="border-b border-foreground/40 pb-1 text-xs font-medium hover:border-primary hover:text-primary">講師の方はこちら</a>
+
+            <div className="join-note mt-9 w-full max-w-[510px] px-5 py-6 sm:px-7 sm:py-7">
+              <p className="text-[13px] font-bold tracking-[0.08em] text-[#a24f42]">はじめる準備</p>
+              <h2 className="mt-2 text-xl font-bold tracking-tight text-[#343a35] sm:text-2xl">開催コードを入力してください</h2>
+              <p className="mt-2 text-sm leading-6 text-[#70736c]">講師から案内された6文字のコードです。</p>
+              <div className="mt-5 overflow-x-auto pb-1">
+                <InputOTP
+                  maxLength={6}
+                  value={joinCode}
+                  onChange={(value) => setJoinCode(value.toUpperCase().replace(/[^A-Z2-9]/g, ""))}
+                  containerClassName="min-w-max"
+                  aria-label="6文字の開催コード"
+                >
+                  <InputOTPGroup className="gap-1.5 sm:gap-2">
+                    {[0, 1, 2, 3, 4, 5].map((index) => <InputOTPSlot key={index} index={index} className="welcome-code-slot h-12 w-10 font-mono text-lg font-bold sm:h-[3.25rem] sm:w-12" />)}
+                  </InputOTPGroup>
+                </InputOTP>
+              </div>
+              <Button className="welcome-start mt-5 h-12 w-full text-[15px]" disabled={checkingSession || joinCode.length !== 6} onClick={() => void joinSession()}>
+                {checkingSession ? "開催を確認しています…" : "ワークを始める"}<ArrowRight />
+              </Button>
+              {error && <p className="mt-4 border-l-2 border-destructive pl-3 text-sm text-destructive" role="alert">{error}</p>}
+              <p className="mt-4 text-xs leading-6 text-[#777a72]">名前の入力はありません。最後の「プラス1行動」だけを匿名で共有します。</p>
+            </div>
           </div>
-        </header>
 
-        <main>
-          <section className="border-b border-foreground/20 bg-[#fffdf8]">
-            <div className="mx-auto grid max-w-6xl lg:grid-cols-[1.15fr_0.85fr]">
-              <div className="px-5 py-14 sm:px-8 sm:py-20 lg:border-r lg:border-foreground/20 lg:py-28">
-                <p className="rule-label mb-7 text-xs font-bold text-[#9b3e31]">7 minutes / individual reflection</p>
-                <h1 className="editorial-title max-w-2xl text-[2.65rem] leading-[1.2] sm:text-6xl">話しやすいチームは、<br className="hidden sm:block" />小さな反応から。</h1>
-                <p className="mt-8 max-w-xl text-base leading-8 text-muted-foreground">7つの問いで普段のチームを振り返り、明日から自分にできる「プラス1行動」を一つ決める短いワークです。</p>
-                <div className="mt-10 flex flex-wrap gap-x-8 gap-y-3 border-t border-foreground/20 pt-5 text-xs text-muted-foreground"><span>所要時間 約7分</span><span>回答は保存しません</span><span>投稿は匿名です</span></div>
-              </div>
+          <figure className="watercolor-figure relative mx-auto w-full max-w-3xl self-stretch lg:min-h-[690px]">
+            <img src="/watercolor-conversation.png" alt="丸いテーブルを囲み、穏やかに話を聴き合う人たちの水彩画" className="h-full min-h-[390px] w-full object-contain object-center lg:min-h-[690px]" />
+            <figcaption className="watercolor-caption absolute bottom-[5%] left-[4%] max-w-[260px] -rotate-2 text-sm leading-7 text-[#62665f] sm:left-[8%] lg:hidden">
+              答えに正解はありません。<br />思い浮かぶままで大丈夫です。
+            </figcaption>
+          </figure>
+        </section>
 
-              <div className="flex items-center px-5 py-12 sm:px-8 lg:px-12">
-                <div className="w-full border-t-4 border-[#9b3e31] bg-background p-6 sm:p-8">
-                  <p className="rule-label text-[10px] font-bold text-muted-foreground">Join the workshop</p>
-                  <h2 className="editorial-title mt-3 text-2xl">開催コードを入力</h2>
-                  <p className="mt-3 text-sm leading-6 text-muted-foreground">講師から案内された6文字のコードを入力してください。</p>
-                  <div className="mt-7">
-                    <InputOTP
-                      maxLength={6}
-                      value={joinCode}
-                      onChange={(value) => setJoinCode(value.toUpperCase().replace(/[^A-Z2-9]/g, ""))}
-                      containerClassName="justify-between"
-                      aria-label="6文字の開催コード"
-                    >
-                      <InputOTPGroup className="gap-2">
-                        {[0, 1, 2, 3, 4, 5].map((index) => <InputOTPSlot key={index} index={index} className="h-12 w-10 border bg-[#fffdf8] font-mono text-lg font-bold sm:w-12" />)}
-                      </InputOTPGroup>
-                    </InputOTP>
-                  </div>
-                  <Button className="mt-6 h-11 w-full" disabled={checkingSession || joinCode.length !== 6} onClick={() => void joinSession()}>{checkingSession ? "開催を確認しています…" : "ワークを始める"}<ArrowRight /></Button>
-                  {error && <p className="mt-4 border-l-2 border-destructive pl-3 text-sm text-destructive" role="alert">{error}</p>}
-                  <p className="mt-6 border-t border-foreground/15 pt-4 text-xs leading-6 text-muted-foreground">名前の入力はありません。最後に作成した「プラス1行動」だけを、参加者同士で共有します。</p>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          <section className="mx-auto max-w-6xl px-5 py-14 sm:px-8 sm:py-20">
-            <div className="mb-9 grid gap-4 sm:grid-cols-[1fr_2fr] sm:items-end"><p className="rule-label text-xs font-bold text-[#9b3e31]">How it works</p><h2 className="editorial-title text-3xl sm:text-4xl">考える、選ぶ、行動にする。</h2></div>
-            <div className="grid border-y border-foreground/20 md:grid-cols-3">
-              {[
-                ["01", "振り返る", "現在または過去のチームを一つ決め、7つの問いに答えます。"],
-                ["02", "一つ選ぶ", "気になる項目、または自分から動けそうな項目を選びます。"],
-                ["03", "共有する", "明日からのプラス1行動を匿名で投稿し、みんなで共有します。"],
-              ].map(([number, label, detail], index) => <article key={number} className={`py-7 md:px-7 ${index > 0 ? "border-t border-foreground/20 md:border-l md:border-t-0" : ""}`}><p className="font-mono text-sm font-bold text-[#9b3e31]">{number}</p><h3 className="mt-5 text-lg font-bold">{label}</h3><p className="mt-3 text-sm leading-7 text-muted-foreground">{detail}</p></article>)}
-            </div>
-          </section>
-        </main>
-
-        <footer className="border-t border-foreground/20 px-5 py-5 text-center text-[10px] tracking-wider text-muted-foreground">PSYCHOLOGICAL SAFETY · PLUS ONE ACTION</footer>
-      </div>
+        <section className="welcome-steps mx-auto max-w-5xl px-5 pb-16 pt-4 sm:px-8 sm:pb-20">
+          <p className="text-center text-sm font-bold tracking-[0.12em] text-[#6d7169]">ワークの流れ</p>
+          <div className="mt-8 grid gap-6 md:grid-cols-3 md:gap-8">
+            {[
+              ["1", "振り返る", "思い浮かべたチームについて、7つの問いに答えます。"],
+              ["2", "ひとつ選ぶ", "気になった問いから、自分が大切にしたいことを選びます。"],
+              ["3", "行動にする", "明日からできる小さな行動にして、匿名で共有します。"],
+            ].map(([number, label, detail]) => (
+              <article key={number} className="welcome-step relative pl-14">
+                <span className="welcome-step-number absolute left-0 top-0 flex size-10 items-center justify-center text-base font-bold">{number}</span>
+                <h2 className="text-lg font-bold text-[#3f4640]">{label}</h2>
+                <p className="mt-2 text-sm leading-7 text-[#71746d]">{detail}</p>
+              </article>
+            ))}
+          </div>
+        </section>
+      </main>
     );
   }
 
